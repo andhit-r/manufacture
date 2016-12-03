@@ -39,7 +39,7 @@ class MrpProduction(models.Model):
             production.sudo().refresh()
             production.mapped('move_created_ids2').filtered(
                 lambda l: l.state == 'done'
-                ).product_price_update_production_done()
+            ).product_price_update_production_done()
         return res
 
     @api.model
