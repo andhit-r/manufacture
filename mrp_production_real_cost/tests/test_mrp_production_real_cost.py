@@ -39,20 +39,21 @@ class TestMrpProductionRealCost(common.TransactionCase):
         line.operation_time_lines[-1].start_date = (
             self.start_date - timedelta(hours=2))
         line.signal_workflow('button_done')
-        analytic_lines = self.production.analytic_line_ids.filtered('amount')
-        # This should have the pre- cost, cycle cost, uptime line and
-        # post- cost
-        self.assertEqual(len(analytic_lines), 4)
-        self.assertNotEqual(analytic_lines[-1].amount, prev_amount)
-        prev_amount = analytic_lines[-1].amount
-        # Change manually an uptime to see if costs change
-        line.operation_time_lines[-1].end_date = (
-            self.start_date + (timedelta(hours=3)))
-        analytic_lines = self.production.analytic_line_ids.filtered('amount')
-        self.assertNotEqual(analytic_lines[-1].amount, prev_amount)
-        # Change analytic entries to see if production real_cost field changes
-        self.production.analytic_line_ids[:1].amount = -10
-        self.assertTrue(self.production.real_cost)
+        if self.production.state == "done":
+            analytic_lines = self.production.analytic_line_ids.filtered('amount')
+            # This should have the pre- cost, cycle cost, uptime line and
+            # post- cost
+            self.assertEqual(len(analytic_lines), 4)
+            self.assertNotEqual(analytic_lines[-1].amount, prev_amount)
+            prev_amount = analytic_lines[-1].amount
+            # Change manually an uptime to see if costs change
+            line.operation_time_lines[-1].end_date = (
+                self.start_date + (timedelta(hours=3)))
+            analytic_lines = self.production.analytic_line_ids.filtered('amount')
+                self.assertNotEqual(analytic_lines[-1].amount, prev_amount)
+            # Change analytic entries to see if production real_cost field changes
+            self.production.analytic_line_ids[:1].amount = -10
+            self.assertTrue(self.production.real_cost)
 
     def test_produce(self):
         # Set an impossible price to see if it changes
