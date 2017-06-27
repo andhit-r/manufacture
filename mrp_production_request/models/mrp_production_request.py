@@ -28,12 +28,17 @@ class MrpProductionRequest(models.Model):
             self.message_subscribe_users(user_ids=[self.assigned_to.id])
 
     @api.model
-    def create(self, vals):
-        """Add sequence if name is not defined and subscribe to the thread
-        the user assigned to the request."""
+    def _create_sequence(self, vals):
         if not vals.get('name') or vals.get('name') == '/':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'mrp.production.request') or '/'
+        return vals
+
+    @api.model
+    def create(self, vals):
+        """Add sequence if name is not defined and subscribe to the thread
+        the user assigned to the request."""
+        vals = self._create_sequence(vals)
         res = super(MrpProductionRequest, self).create(vals)
         res._subscribe_assigned_user(vals)
         return res
