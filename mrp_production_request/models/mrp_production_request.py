@@ -51,14 +51,15 @@ class MrpProductionRequest(models.Model):
     def _get_mo_valid_states(self):
         return ['draft', 'confirmed', 'ready', 'in_production', 'done']
 
-    @api.one
+    @api.multi
     @api.depends('mrp_production_ids', 'mrp_production_ids.state', 'state')
     def _compute_manufactured_qty(self):
         valid_states = self._get_mo_valid_states()
-        valid_mo = self.mrp_production_ids.filtered(
-            lambda mo: mo.state in valid_states).mapped('product_qty')
-        self.manufactured_qty = sum(valid_mo)
-        self.pending_qty = max(self.product_qty - self.manufactured_qty, 0.0)
+        for req in self:
+            valid_mo = req.mrp_production_ids.filtered(
+                lambda mo: mo.state in valid_states).mapped('product_qty')
+            req.manufactured_qty = sum(valid_mo)
+            req.pending_qty = max(req.product_qty - req.manufactured_qty, 0.0)
 
     name = fields.Char(
         default="/", required=True,
