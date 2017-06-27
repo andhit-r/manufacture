@@ -21,6 +21,12 @@ class MrpProductionRequest(models.Model):
     def _get_default_requested_by(self):
         return self.env.user
 
+    @api.multi
+    def _subscribe_assigned_user(self, vals):
+        self.ensure_one()
+        if vals.get('assigned_to'):
+            self.message_subscribe_users(user_ids=[self.assigned_to.id])
+
     @api.model
     def create(self, vals):
         """Add sequence if name is not defined and subscribe to the thread
@@ -29,16 +35,14 @@ class MrpProductionRequest(models.Model):
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'mrp.production.request') or '/'
         res = super(MrpProductionRequest, self).create(vals)
-        if vals.get('assigned_to'):
-            res.message_subscribe_users(user_ids=[res.assigned_to.id])
+        res._subscribe_assigned_user(vals)
         return res
 
     @api.multi
     def write(self, vals):
         res = super(MrpProductionRequest, self).write(vals)
         for request in self:
-            if vals.get('assigned_to'):
-                self.message_subscribe_users(user_ids=[request.assigned_to.id])
+            request._subscribe_assigned_user(vals)
         return res
 
     @api.onchange('product_id')
