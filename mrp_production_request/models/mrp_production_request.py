@@ -160,6 +160,8 @@ class MrpProductionRequest(models.Model):
     @api.multi
     def button_done(self):
         self.write({'state': 'done'})
+        if self.mapped('procurement_id'):
+            self.mapped('procurement_id').write({'state': 'done'})
         return True
 
     @api.multi
